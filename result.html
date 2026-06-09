@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты теста</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 10px;">Результаты тестирования</h1>
+        <h3 id="test-title" style="text-align: center; color: #64748b; margin-bottom: 30px;">---</h3>
+
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 30px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 24px; font-weight: bold;" id="score-text">Загрузка результатов...</div>
+            <div style="font-size: 48px; font-weight: 900; color: #2563eb; margin: 10px 0;" id="percent-text">0%</div>
+        </div>
+
+        <h2>Детальный разбор</h2>
+        <div id="review-container"></div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="index.html" class="btn">На главную</a>
+        </div>
+    </div>
+
+    <script>
+        // Жесткий блок кнопки Назад
+        history.pushState(null, null, window.location.href);
+
+        window.addEventListener('popstate', function () {
+            history.pushState(null, null, window.location.href);
+            window.location.replace('index.html');
+        });
+
+        // Дополнительная защита: при загрузке страницы результатов, сразу очищаем ответы на тесте
+        // чтобы при случайном возврате нельзя было дважды завершить
+        function blockBackNavigation() {
+            history.pushState(null, null, window.location.href);
+        }
+
+        // Блокируем при загрузке и при каждом возможном событии
+        window.addEventListener('load', blockBackNavigation);
+        window.addEventListener('pageshow', blockBackNavigation);
+        window.addEventListener('pagehide', function() {
+            // При попытке покинуть страницу - сбрасываем историю браузера
+            history.pushState(null, null, window.location.href);
+        });
+
+        function loadResults() {
+            try {
+                const dataRaw = localStorage.getItem('last_test_result');
+                if (!dataRaw) {
+                    window.location.replace('index.html');
+                    return;
+                }
+
+                const data = JSON.parse(dataRaw);
+                document.getElementById('test-title').textContent = data.title || "Без названия";
+
+                let totalScore = 0;
+                let maxPossibleScore = 0;
+                const subjectStats = {};
+                const reviewContainer = document.getElementById('review-container');
+
+                if (!data.questions || !Array.isArray(data.questions)) {
+                    document.getElementById('score-text').textContent = "Ошибка: Данные повреждены.";
+                    return;
+                }
+
+                const reviewHtml = data.questions.map((q, idx) => {
+                    const userAns = data.userAnswers ? data.userAnswers[q.id] : undefined;
+                    const correctAns = q.answer;
+                    let questionScore = 0;
+                    let maxQScore = q.type === 'multiple' ? 2 : 1;
+                    
+                    if (q.type === 'multiple') {
+                        const userSet = new Set(Array.isArray(userAns) ? userAns : []);
+                        const correctSet = new Set(Array.isArray(correctAns) ? correctAns : []);
+                        
+                        const missed = [...correctSet].filter(x => !userSet.has(x)).length;
+                        const extra = [...userSet].filter(x => !correctSet.has(x)).length;
+                        const totalErrors = missed + extra;
+
+                        if (totalErrors === 0) questionScore = 2;
+                        else if (totalErrors === 1) questionScore = 1;
+                    } else {
+                        if (userAns !== undefined && userAns === correctAns) questionScore = 1;
+                    }
+
+                    totalScore += questionScore;
+                    maxPossibleScore += maxQScore;
+
+                    const subjectName = q.subject || "Общие вопросы";
+                    if (!subjectStats[subjectName]) {
+                        subjectStats[subjectName] = { score: 0, max: 0 };
+                    }
+                    subjectStats[subjectName].score += questionScore;
+                    subjectStats[subjectName].max += maxQScore;
+
+                    const isCorrect = questionScore === maxQScore;
+                    const isPartial = questionScore > 0 && questionScore < maxQScore;
+
+                    let userAnswerText = 'Не отвечено';
+                    if (q.type === 'multiple' && Array.isArray(userAns) && userAns.length > 0) {
+                        userAnswerText = userAns.map(i => q.options[i] || 'Ошибка').join(', ');
+                    } else if (q.type !== 'multiple' && userAns !== undefined) {
+                        userAnswerText = q.options[userAns] || 'Не отвечено';
+                    }
+
+                    let correctAnswerText = q.type === 'multiple' && Array.isArray(correctAns)
+                        ? correctAns.map(i => q.options[i]).join(', ')
+                        : q.options[correctAns];
+
+                    return `
+                        <div class="review-item" style="background: #ffffff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-left: 5px solid ${isCorrect ? '#10b981' : (isPartial ? '#f59e0b' : '#ef4444')}">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; color: #64748b;">
+                                <span>Вопрос ${idx + 1} (${questionScore} из ${maxQScore} б.)</span>
+                                <strong>${subjectName}</strong>
+                            </div>
+                            <strong>${q.question}</strong>
+                            <div style="margin-top: 10px; font-size: 14px; line-height: 1.5;">
+                                <span style="color: ${questionScore > 0 ? '#10b981' : '#ef4444'}"><b>Ваш ответ:</b> ${userAnswerText}</span><br>
+                                <span style="color: #10b981"><b>Правильный ответ:</b> ${correctAnswerText}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                let statsHtml = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-top: 15px;">`;
+                for (const sub in subjectStats) {
+                    const subPercent = Math.round((subjectStats[sub].score / subjectStats[sub].max) * 100) || 0;
+                    statsHtml += `
+                        <div style="background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+                            <div style="font-weight: bold; font-size: 14px; color: #475569;">${sub}</div>
+                            <div style="font-size: 18px; font-weight: bold; color: #2563eb; margin: 5px 0;">
+                                ${subjectStats[sub].score} из ${subjectStats[sub].max} б.
+                            </div>
+                            <div style="font-size: 12px; color: #64748b;">${subPercent}%</div>
+                        </div>
+                    `;
+                }
+                statsHtml += `</div>`;
+
+                const globalPercent = Math.round((totalScore / maxPossibleScore) * 100) || 0;
+                
+                document.getElementById('score-text').innerHTML = `
+                    Общий балл: <b>${totalScore} из ${maxPossibleScore}</b>
+                    ${statsHtml}
+                `;
+                document.getElementById('percent-text').textContent = `${globalPercent}%`;
+                reviewContainer.innerHTML = reviewHtml;
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        window.onload = loadResults;
+    </script>
+</body>
+</html>

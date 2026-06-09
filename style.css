@@ -1,0 +1,156 @@
+:root {
+    --bg-color: #f4f6f9;
+    --text-color: #1e293b;
+    --primary: #1e3a8a;
+    --primary-hover: #172554;
+    --success: #10b981;
+    --danger: #ef4444;
+    --card-bg: #ffffff;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+h1, h2, h3 {
+    color: #0f172a;
+    margin-top: 0;
+}
+
+.btn {
+    display: inline-block;
+    background-color: var(--primary);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Стили для теста */
+.timer-box {
+    float: right;
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--danger);
+    background: #fee2e2;
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+.option-label {
+    display: block;
+    background: #f8fafc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-label:hover {
+    border-color: var(--primary);
+    background: #eff6ff;
+}
+
+.option-label input {
+    margin-right: 12px;
+    transform: scale(1.2);
+}
+
+.navigation-tools {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Разбор ошибок */
+.review-item {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border-left: 5px solid #cbd5e1;
+    background: #f8fafc;
+}
+
+.review-item.correct { border-left-color: var(--success); }
+.review-item.incorrect { border-left-color: var(--danger); }
+/* Добавь это в конец style.css */
+.nav-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 25px;
+    padding: 10px;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.nav-item {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-item.active {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.nav-item.answered {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Стили для чекбоксов (множественный выбор) */
+.option-label input[type="checkbox"] {
+    border-radius: 4px; /* Квадратные для отличия */
+}
+
+.code-block {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #1e293b;
+    margin-bottom: 20px;
+    white-space: pre-wrap; /* Сохраняет переносы и переносит длинные строки, если они не влезают */
+    text-align: left;
+}
